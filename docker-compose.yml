@@ -54,4 +54,22 @@ services:
     volumes:
       - ./orders-ms/postgres:/var/lib/postgresql/data
 
+  # =================================
+  # Payments MS
+  # =================================
+
+  payments-ms:
+    build: ./payments-ms
+    volumes:
+      - ./payments-ms/src:/usr/src/app/src
+    ports:
+      - "3003:3003"
+    command: npm run start:dev
+    environment:
+      - PORT=3003
+      - NATS_SERVERS=nats://nats-server:4222
+      - STRIPE_SECRET=sk_test_51QBD61FAL6mPVGbliZSCVFeAo7ScYajb4pZ2EQBpAL7845oUXO9b4lL5ONQ01N9jr3bNyxA5SAttdOQBEE5vsoSM007ytSAuQT
+      - STRIPE_SUCCESS_URL=http://localhost:3003/payments/success
+      - STRIPE_CANCEL_URL=http://localhost:3003/payments/cancel
+      - STRIPE_ENDPOINT_SECRET=whsec_GZHexKzez9Qk7BOPSY6IZ028VTLWNLnI
     
