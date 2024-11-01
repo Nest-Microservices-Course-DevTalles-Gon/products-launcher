@@ -73,3 +73,16 @@ services:
       - STRIPE_CANCEL_URL=http://localhost:3003/payments/cancel
       - STRIPE_ENDPOINT_SECRET=whsec_GZHexKzez9Qk7BOPSY6IZ028VTLWNLnI
     
+  # =================================
+  # Auth MS
+  # =================================
+
+  auth-ms:
+    build: ./auth-ms
+    volumes:
+      - ./auth-ms/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL=${AUTH_DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
