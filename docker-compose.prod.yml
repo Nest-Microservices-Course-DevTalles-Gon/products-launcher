@@ -1,0 +1,95 @@
+version: '3'
+
+services:
+
+  nats-server: 
+    image: nats:latest
+
+  client-gateway:
+    build:
+      context: ./client-gateway
+      dockerfile: dockerfile.prod
+    image: client-gateway-prod
+    ports:
+      - ${CLIENT_GATEWAY_PORT}:${CLIENT_GATEWAY_PORT}
+    environment:
+      - PORT=${CLIENT_GATEWAY_PORT}
+      - NATS_SERVERS=nats://nats-server:4222
+
+  # # =================================
+  # # Auth MS
+  # # =================================
+
+  auth-ms:
+    build:
+      context: ./auth-ms
+      dockerfile: dockerfile.prod
+    image: auth-ms-prod
+    environment:
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL=${AUTH_DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+
+  # # =================================
+  # # Products MS
+  # # =================================
+
+  products-ms: 
+    build: 
+      context: ./products-ms
+      dockerfile: dockerfile.prod
+    image: products-ms-prod
+    environment:
+      - PORT=3001
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL=file:./dev.db
+
+  # # =================================
+  # # Orders MS
+  # # =================================
+
+  orders-ms:
+    build: 
+      context: ./orders-ms
+      dockerfile: dockerfile.prod
+      args:
+        - ORDERS_DATABASE_URL=${ORDERS_DATABASE_URL}
+    image: orders-ms-prod
+    environment:
+      - PORT=3002
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL=${ORDERS_DATABASE_URL}
+
+  # # Orders DB
+  # orders-db:
+  #   image: postgres:16.2
+  #   ports:
+  #     - "5432:5432"
+  #   restart: always
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=123456
+  #     - POSTGRES_DB=ordersdb
+  #   volumes:
+  #     - ./orders-ms/postgres:/var/lib/postgresql/data
+
+  # # =================================
+  # # Payments MS
+  # # =================================
+
+  payments-ms:
+    build:
+      context: ./payments-ms
+      dockerfile: dockerfile.prod
+    image: payments-ms-prod
+    ports:
+      - ${PAYMENTS_MS_PORT}:${PAYMENTS_MS_PORT}
+    environment:
+      - PORT=3003
+      - NATS_SERVERS=nats://nats-server:4222
+      - STRIPE_SECRET=sk_test_51QBD61FAL6mPVGbliZSCVFeAo7ScYajb4pZ2EQBpAL7845oUXO9b4lL5ONQ01N9jr3bNyxA5SAttdOQBEE5vsoSM007ytSAuQT
+      - STRIPE_SUCCESS_URL=http://localhost:3003/payments/success
+      - STRIPE_CANCEL_URL=http://localhost:3003/payments/cancel
+      - STRIPE_ENDPOINT_SECRET=whsec_GZHexKzez9Qk7BOPSY6IZ028VTLWNLnI
+    
+ 
